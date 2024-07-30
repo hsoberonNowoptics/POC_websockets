@@ -21,7 +21,7 @@ wss.on("connection", function connection(ws) {
         message : "the reinforcements arrived"
     }
 
-    console.log(JSON.stringify(ws));
+    // console.log(JSON.stringify(ws));
     
     //Send the central socket info to the new stablished connection. 
     ws.send(JSON.stringify(response));
@@ -38,12 +38,12 @@ wss.on("connection", function connection(ws) {
         }
 
         //When the messages contains a TO option, despatch the data to that ws. 
-        if(info.to){
-            console.log("Sending data to: " + info.to);
+        // if(info.to){
+        //     console.log("Sending data to: " + info.to);
 
-            fleet[info.to].send(JSON.stringify(info))
+        //     fleet[info.to].send(JSON.stringify(info))
             
-        }
+        // }
       });
     
     

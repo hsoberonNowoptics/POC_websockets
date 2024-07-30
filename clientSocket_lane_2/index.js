@@ -34,23 +34,23 @@ ws.on("message", function message(data) {
 
 
 ws.on("close", function(event) {
-    console.log(JSON.stringify(event));
+    // console.log(JSON.stringify(event));
     
     var ws2 = new WebSocket('ws://localhost:8081');
 
-    console.log("Reconnect to backup server");
+    // console.log("Reconnect to backup server");
 
     ws2.on("open", function(){
         console.log("Reconnect to backup server");
 
-        ws2.send(JSON.stringify(lineData));
+        // ws2.send(JSON.stringify(lineData));
     });
 
-    ws2.on("message", function message(data) {
-        const info = JSON.parse(data)
-        console.log('Receiving from :' + info.id + '\n' + info.message);
-        if(info.description) {
-            console.log(info.description);
-        }
-    });
+    // ws2.on("message", function message(data) {
+    //     const info = JSON.parse(data)
+    //     console.log('Receiving from :' + info.id + '\n' + info.message);
+    //     if(info.description) {
+    //         console.log(info.description);
+    //     }
+    // });
 });

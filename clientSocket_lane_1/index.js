@@ -44,17 +44,17 @@ ws.on("message", function message(data) {
 
 
 ws.on("close", function(event) {
-    console.log(JSON.stringify(event));
+    // console.log(JSON.stringify(event));
     
     var ws2 = new WebSocket('ws://localhost:8081');
 
     ws2.on("open", function(){
         console.log("Reconnect to backup server");
     
-        console.log("Sending a message to 8092");
-        lineData.to = 8092;
+        // console.log("Sending a message to 8092");
+        // lineData.to = 8092;
 
-        ws2.send(JSON.stringify(lineData));
+        // ws2.send(JSON.stringify(lineData));
     })
     
 });
