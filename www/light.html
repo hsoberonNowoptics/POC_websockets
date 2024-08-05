@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MultiSocket Demo - LIGHT BULBS</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark">
+    <header>
+        <h1>ROOM</h1>
+        <div>
+            <p id="status">Status</p>
+        </div>
+    </header>
+    <div class="images">
+        <img id="light" src="img/off.png" alt="light off">
+    </div>
+    <hr>
+    <div class="notifications">
+        <h3>Messages</h3>
+        <p id="messages"></p>
+    </div>
+
+
+    <script>
+
+        //ORDER
+        /* 
+            Try to connect
+            enable to receive notifications. 
+            on close try to connect
+        */
+        
+        let info = {
+            id: '10001',
+            to: '10000', //Admin page
+            name: 'Bulb',
+            message: 'A light bulb',
+            description: 'Bulb is connected',
+            status: 0
+        }
+
+        const ports = [8091, 8092, 8093];
+        var port = 0;
+
+        startConnection(port);
+
+        
+        function startConnection(port){
+            document.getElementById('status').innerHTML = "Connecting";
+
+            let socket = new WebSocket("ws://localhost:" + ports[port]);
+
+            socket.onerror = function(event){
+                document.getElementById('status').innerHTML = "Disconnected";
+                info.status = 0;
+                updateLight();
+                port++;
+                if(port < ports.length){
+                    document.getElementById('status').innerHTML = "Disconnected... Trying reconnection in 5 seg";
+                    setTimeout(function () {
+                        startConnection(port);
+                    }, 5000);
+                    
+                }
+            }
+
+            socket.onopen = function(e) {
+                document.getElementById('status').innerHTML = "Connected";
+                console.log('Connected');
+
+                socket.send(JSON.stringify(info))
+            };
+
+            socket.onmessage = function(event) {
+                let data = JSON.parse(event.data)
+
+                const p = document.createElement("p");
+                p.innerText = data.message;
+                document.getElementById('messages').appendChild(p);
+
+                if(data.status) {
+                    info.status = data.status;
+                    updateLight();
+                }
+
+            };
+        }
+
+
+        /* CONTROLLERS */
+        function updateLight(){
+            if (info.status){
+                document.getElementById('light').src = 'img/on.png';
+            }else{
+                document.getElementById('light').src = 'img/off.png';
+            }
+        }
+    </script>
+</body>
+</html>

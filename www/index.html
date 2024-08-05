@@ -5,8 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MultiSocket Demo</title>
 </head>
-<body>
-    <h1>Hi Welcome to the train Station</h1>
-    <p>Connecting to a server...</p>
+<body> 
+    <h1>Hi Welcome to the ADMIN Station</h1>
+    <p id="status">Connecting to a WS server...</p>
+    <hr>
+    <h3>Messages</h3>
+    <div class="notifications">
+        <p id="messages"></p>
+    </div>
+
+
+    <script>
+        let socket = new WebSocket("ws://localhost:8091");
+
+        console.log(socket);
+
+        let info = {
+            id: '10000',//Admin page
+            name: 'Admin',
+            message: 'This is the admin page',
+            description: 'Controllers will be ready',
+        }
+
+        socket.onopen = function(e) {
+            document.getElementById('status').innerHTML = "Connected";
+            console.log('Connected');
+        };
+
+        socket.onmessage = function(event) {
+            let info = JSON.parse(event.data)
+
+            document.getElementById('messages').innerHTML = info.message;
+        };
+    </script>
 </body>
 </html>

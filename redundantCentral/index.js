@@ -3,6 +3,8 @@
  */
 import { WebSocketServer } from "ws";
 
+const ports = [8080, 8081, 8082];
+
 const wss = new WebSocketServer({ port: 8081 });
 
 console.log("Redundant WS IS WAITING UP")
@@ -38,13 +40,13 @@ wss.on("connection", function connection(ws) {
         }
 
         //When the messages contains a TO option, despatch the data to that ws. 
-        // if(info.to){
-        //     console.log("Sending data to: " + info.to);
+        if(info.to){
+            console.log("Sending data to: " + info.to);
 
-        //     fleet[info.to].send(JSON.stringify(info))
+            fleet[info.to].send(JSON.stringify(info))
             
-        // }
-      });
+        }
+    });
     
     
 });
