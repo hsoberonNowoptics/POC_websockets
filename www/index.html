@@ -4,39 +4,233 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MultiSocket Demo</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
 <body> 
-    <h1>Hi Welcome to the ADMIN Station</h1>
-    <p id="status">Connecting to a WS server...</p>
+    <header>
+        <h1>WebSockets POC</h1>
+        <h3>Messaging test on websockets reconnections</h3>
+    </header>
+    
     <hr>
-    <h3>Messages</h3>
-    <div class="notifications">
-        <p id="messages"></p>
-    </div>
 
+    <main>
+        <h2 style="text-align: center;">Hi, I'm <span id="name"></span></h2>
+        <p id="UUID"></p>
+        
+        <div class="container-fluid" style="justify-content: center;">
+            <div class="block" >
+                <div class="header-block">
+                    <h2>WebScocket Client Connection</h2>
+                    <select name="websocket" id="websocket_id">
+                        <option value="8091">Client 8091</option>
+                        <option value="8092">Client 8092</option>
+                        <option value="8093">Client 8093</option>
+                    </select>
+                    <p><b>Status: </b><span class="status">Disconnected</span></p>
+                    <br>
+                    <button class="btn connect">Connect</button>
+                </div>
+            </div>
+            <div class="block" >
+                <div class="header-block">
+                    <h2>Ping System</h2>
+                    <select name="clients" id="client_id">
+                        <option disabled>No client available</option>
+                    </select>
+                    <div class="input-control">
+                        <label for="delayPing">Delay message:</label>
+                        <input type="text" id="delayPing" value="1000">
+                    </div>
+                    
+                    <br>
+                    <button disabled class="btn pingClient" data-stop="true">Start Ping</button>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="block">
+                <h3>Messages</h3>
+                <div id="messages">
+                    <!-- New Messages from WS -->
+                </div>
+            </div>
+        </div>
+    </main>
 
     <script>
-        let socket = new WebSocket("ws://localhost:8091");
+        //Random ID for the page
+        const uuid = self.crypto.randomUUID().split('-')[0];
+        $('#UUID').text(uuid);
 
-        console.log(socket);
+        var tryBackup = true;
+        const backupPort = 8093;
 
-        let info = {
-            id: '10000',//Admin page
-            name: 'Admin',
-            message: 'This is the admin page',
-            description: 'Controllers will be ready',
+        //Random name 
+        const names = ['John', 'Lisa', 'Martha', 'Nore', 'Lucas', 'Jessy', 'Allan', 'Mike'];
+        const name = names[Math.floor(Math.random() * names.length)];
+        $('#name').text(name);
+
+        //active connection
+        var ws_conn;
+        
+
+        $('.connect').on('click', function(e){
+            const port = $(this).closest('.block').find('select').val();
+
+            if(ws_conn){
+                ws_conn.close();
+                tryBackup = false;
+            }else{
+                console.log('Connecting to:' + port);
+                wsConnection(port);
+            }
+
+            
+        })
+
+        $('.pingClient').on('click', function(event){
+            event.preventDefault();
+            
+            const ping_to = $('#client_id').val();
+
+            if($(this).data('stop')){
+                $(this).data('stop', false).text('Stop Ping').removeClass('btn-green').addClass('btn-orange');
+
+                if(ping_to){
+                    console.log('Start Ping to: ' + ping_to)
+                    startPing(ping_to);
+                }
+            }else{
+                $(this).data('stop', true).text('Start Ping').addClass('btn-green').removeClass('btn-orange');
+            }
+            
+            
+        })
+
+
+
+
+        function wsConnection(port){
+            let ws = new WebSocket("ws://localhost:" + port + '?id=' + uuid + '&name=' + name);
+         
+            ws.onopen = function(e) {
+                $('.status').text('Connected')
+                $('.btn.connect').addClass('btn-green').text('Disconnect')
+                $('#websocket_id').val(port);
+                tryBackup = true;
+                ws_conn = ws; 
+            };
+
+            ws.onclose = function(e){
+                console.log('Disconnecting from port ' + port);
+                $('.status').text('Disconnected')
+                $('.btn.connect').removeClass('btn-green').text('Connect')
+                logMessage('<b>Disconnected</b>');
+                ws_conn = null;
+
+                //Trying the backupPort
+                if(tryBackup && port != backupPort){
+                    console.log('Trying backup por ' + backupPort)
+                    tryBackup = false;
+                    wsConnection(backupPort);
+                }
+                
+            }
+
+            ws.onerror = function(e) {
+                $('#block-' + port).find('.status').text('Connection Error')
+                $('#block-' + port).find('.btn').removeClass().addClass('btn').text('Connect')
+                ws_conn = null;
+            }
+
+            ws.onmessage = function(event) {
+                let info = JSON.parse(event.data)
+                
+                logMessage('<b>' + info.message + '</b>');
+
+                if(info.type == 'all'){
+                    enableMessages(info.data);
+                }
+            };
         }
 
-        socket.onopen = function(e) {
-            document.getElementById('status').innerHTML = "Connected";
-            console.log('Connected');
-        };
 
-        socket.onmessage = function(event) {
-            let info = JSON.parse(event.data)
 
-            document.getElementById('messages').innerHTML = info.message;
-        };
+        function logMessage(message){
+            var messages = $('#messages');
+            const date = new Date().toLocaleString();
+            var log = $('<p>' + message +' <span>' + date + '</span></p>');
+            log.appendTo(messages);
+            $("#messages").scrollTop($("#messages")[0].scrollHeight);
+        }
+        
+        //handles the ping block base on the list of available clients
+        function enableMessages(clientList){
+            //remove the previews options available
+            $('#client_id').html('')
+
+            clientList.forEach(client => {
+                if(client.web != uuid){
+                    const message = "Availabe client: " + client.web + " " + client.name;
+                    logMessage(message);
+
+                    //create the new select option client 
+                    var option = $('<option>').val(client.web).text('Client ' + client.web + " " + client.name)
+                    $('#client_id').append(option)
+                }
+            })
+
+            //enable the sendMessage button
+            if($('#client_id option').length > 0){
+                $('.btn.pingClient').attr('disabled', false).addClass('btn-green');
+            }else{
+                $('#client_id').append($('<option>').text('No client available').attr('disabled', true));
+                $('.btn.pingClient').attr('disabled', true).removeClass('btn-green');
+            }
+
+        }
+
+
+        //Send a ping to destination every x time
+        function startPing(ping_to, count = 0, stop = false){
+            if(stop){
+                console.log('Stop Ping after ' + count);
+                return true;
+            }
+                
+            count++;
+            
+            var info = {
+                to: ping_to,
+                message: count + '. ping from ' + uuid + ' ' + name,
+                web_id: uuid,
+                webname: name,
+            }
+
+            const stoping = (count > 1000) ? true : $('.pingClient').data('stop');
+
+            var delayPing = $('#delayPing').val();
+
+            if(delayPing >= 100){
+                setTimeout(function() {
+                    ws_conn.send(JSON.stringify(info));
+
+                    startPing(ping_to, count, stoping);
+                }
+                , delayPing);
+            }else{
+                console.error('Delay ping too short');
+            }
+
+            
+            
+        }
+
+        
     </script>
 </body>
 </html>
