@@ -4,45 +4,61 @@ Probe of concept for different websockets clients, communicating using a central
 ### WEBSOCKET CENTRAL
 Called gran-central,
 is use as dispatch messaging and connection hub of the clients. 
+_can be run up to 3 times to have 3 clients PORTS 8080, 8081, 8082_ 
 
 
-### CLIENT 1 
-called Line 1, 
+### CLIENT HIBRID Client-Server
+called Line, 
 Connects to GranCentral and send its own data. 
+Receives connections from WEB clients and redirects messages to CENTRAL
 
-### CLIENT 2 
-Called Line 2,  
-Connects to GrandCentral, send its own data, but also sends a destination as Line 1
 
-- Grand central receives the line 2 message, redirect to line 1
-- Line 1 gets the Line 2 messages and response with destination line 2 
-- Grand central receives the line 1 and redirect to line 2. 
-- Line 2 gets Line 1 info. 
+### Web Pages
+Can be load many times at once 
+Connect display 3 lines to manualy connect to.
+Receives other Web Clients 
+Send messages to selected web 
+
 
 
 # To TEST
 
 - Clone the project
-- verify is running NODE V22
+- verify is running NODE >= V22
 - Run the _socketCentral_ project with `node index.js`
+- Run other _socketCentral_ to be the redundant central server
+- Then Start the _clientSocket_ multiple times with `node index.js`
+- Open _www/index.html_ the webpage on two different windows
 
-Then Start the _clientSocket_lane_1_ project with `node index.js`
 ````
 Line 1 WS IS UP
 Welcome to the GranCentral Dispatch
 ````
 
-Finaly Start the _clientSocket_lane_2_ with `node index.js` 
 ```
-Hi from Line 2
-Best line in town
-Sending message to central, destination lane 8081...
-Receiving from :8080
+GRAN-CENTRAL WS IS UP at: 8080
+```
+
+```
+Client ID: 0a52d9d8
+Starting on port: 8091
+Connected to Grand Central at port 8080
 Welcome to the GranCentral Dispatch
-Receiving from :8081
-Hello from Line 1
-The #1 line in the fleet.
 ```
 
-
+``` 
+Client ID: 0f25e05f
+Starting on port: 8091
+Port already in use
+Starting on port: 8092
+Connected to Grand Central at port 8080
+Welcome to the GranCentral Dispatch
+New Connection from : Nore (b717e41c)
+Connected Web CLientes
+Message from b717e41c to CENTRAL
+Message from b717e41c to CENTRAL
+Message from b717e41c to CENTRAL
+Message from b717e41c to CENTRAL
+Message from b717e41c to CENTRAL
+```
 
